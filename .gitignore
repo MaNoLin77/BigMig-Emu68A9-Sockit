@@ -1,0 +1,51 @@
+db
+greybox_tmp
+incremental_db
+output_files
+simulation
+hc_output
+scaler
+hps_isw_handoff
+vip
+*_sim
+.qsys_edit
+PLLJ_PLLSPE_INFO.txt
+*.bak
+*.orig
+*.rej
+*.qdf
+*.rpt
+*.smsg
+# not *.summary: the fitter summary is kept beside each archived .rbf
+output_files/*.summary
+*.done
+*.jdi
+*.pin
+*.sof
+*.qws
+*.ppf
+*.ddb
+build_id.v
+c5_pin_model_dump.txt
+*.sopcinfo
+*.csv
+*.f
+*.cmp
+*.sip
+*.spd
+*.bsf
+*~
+*.xml
+*_netlist
+# not *.cdf: jtag.cdf is a project input (CDF_FILE in BigMig.qsf)
+output_files/*.cdf
+
+# local lint/sim scratch binaries
+sys/lw_wrap
+sys/*.o
+
+builds/
+.DS_Store
+
+# staged here and published as a GitHub Release rather than tracked in the repo
+releases/
