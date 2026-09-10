@@ -1,4 +1,4 @@
-# BigMig for MiSTer
+# BigMig for Sockit (MiSTer)
 
 A **Big Box Amiga** for the MiSTer board: the Minimig chipset in the FPGA fabric, driven by a
 68k that is not in the fabric at all.
