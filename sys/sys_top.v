@@ -27,21 +27,21 @@ module sys_top
 	input         FPGA_CLK3_50,
 
 	//////////// HDMI //////////
-	output        HDMI_I2C_SCL,
-	inout         HDMI_I2C_SDA,
+	// output        HDMI_I2C_SCL,
+	// inout         HDMI_I2C_SDA,
 
-	output        HDMI_MCLK,
-	output        HDMI_SCLK,
-	output        HDMI_LRCLK,
-	output        HDMI_I2S,
+	// output        HDMI_MCLK,
+	// output        HDMI_SCLK,
+	// output        HDMI_LRCLK,
+	// output        HDMI_I2S,
 
-	output        HDMI_TX_CLK,
-	output        HDMI_TX_DE,
-	output [23:0] HDMI_TX_D,
-	output        HDMI_TX_HS,
-	output        HDMI_TX_VS,
+	// output        HDMI_TX_CLK,
+	// output        HDMI_TX_DE,
+	// output [23:0] HDMI_TX_D,
+	// output        HDMI_TX_HS,
+	// output        HDMI_TX_VS,
 	
-	input         HDMI_TX_INT,
+	// input         HDMI_TX_INT,
 
 	//////////// SDR ///////////
 	output [12:0] SDRAM_A,
@@ -69,17 +69,34 @@ module sys_top
 
 `else
 	//////////// VGA ///////////
-	output  [5:0] VGA_R,
-	output  [5:0] VGA_G,
-	output  [5:0] VGA_B,
-	inout         VGA_HS,
+	//SoCkit, DE10-standard, DE1-SoC implementation needs 8 bit color otherwise the brightness is low on the DAC
+	output  [7:0] VGA_R,
+	output  [7:0] VGA_G,
+	output  [7:0] VGA_B,
+	inout         VGA_HS,  // VGA_HS is secondary SD card detect when VGA_EN = 1 (inactive)
 	output		  VGA_VS,
-	input         VGA_EN,  // active low
+	//input       VGA_EN,  // active low
+	//SoCkit, DE10-standard, DE1-SoC implementation for on-board VGA DAC route - additional pins
+	output 		  VGA_CLK,
+	output 		  VGA_BLANK_N,
+	output 		  VGA_SYNC_N,
 
 	/////////// AUDIO //////////
 	output		  AUDIO_L,
 	output		  AUDIO_R,
 	output		  AUDIO_SPDIF,
+
+	//AUDIO CODEC implementation: SSM2603 for Arrow SoCkit, Wolfson WM8731 for DE10-standard & DE1-SoC
+	inout wire    AUD_ADCLRCK,  // Audio CODEC ADC LR Clock
+	input wire    AUD_ADCDAT,   // Audio CODEC ADC Data
+	inout wire    AUD_DACLRCK,  // Audio CODEC DAC LR Clock
+	output wire   AUD_DACDAT,   // Audio CODEC DAC Data
+    inout wire    AUD_BCLK,     // Audio CODEC Bit-Stream Clock
+    output wire   AUD_XCK,      // Audio CODEC Chip Clock
+    output wire   AUD_MUTE,		// Audio CODEC Mute (active low)
+	// I2C Audio CODEC
+    inout wire    AUD_I2C_SDAT,     // I2C Data
+    output wire   AUD_I2C_SCLK,     // I2C Clock
 
 	//////////// SDIO ///////////
 	inout   [3:0] SDIO_DAT,
@@ -96,33 +113,78 @@ module sys_top
 `endif
 
 	////////// I/O ALT /////////
-	output        SD_SPI_CS,
-	input         SD_SPI_MISO,
-	output        SD_SPI_CLK,
-	output        SD_SPI_MOSI,
+	// output        SD_SPI_CS,
+	// input         SD_SPI_MISO,
+	// output        SD_SPI_CLK,
+	// output        SD_SPI_MOSI,
 
 	inout         SDCD_SPDIF,
 	output        IO_SCL,
 	inout         IO_SDA,
 
 	////////// ADC //////////////
-	output        ADC_SCK,
-	input         ADC_SDO,
-	output        ADC_SDI,
-	output        ADC_CONVST,
+	// output        ADC_SCK,
+	// input         ADC_SDO,
+	// output        ADC_SDI,
+	// output        ADC_CONVST,
 
 	////////// MB KEY ///////////
 	input   [1:0] KEY,
 
 	////////// MB SWITCH ////////
-	input   [3:0] SW,
+	//input   [3:0] SW,
+	//SoCkit, DE10-standard, DE1-SoC board implementation
+	inout   [3:0] SW,
 
 	////////// MB LED ///////////
-	output  [7:0] LED,
+	//output  [7:0] LED
+	//SoCkit, DE10-standard, DE1-SoC board implementation
+	output LED_0_USER,
+	output LED_1_HDD,
+	output LED_2_POWER,
+	output LED_3_LOCKED,
 
 	///////// USER IO ///////////
 	inout   [6:0] USER_IO
 );
+
+//SoCkit, DE10-standard, DE1-SoC board implementation
+wire        HDMI_TX_CLK;
+wire        HDMI_TX_DE;
+wire [23:0] HDMI_TX_D;
+wire        HDMI_TX_HS;
+wire        HDMI_TX_VS;
+wire        HDMI_TX_INT;
+wire        HDMI_I2C_SCL;
+wire        HDMI_I2C_SDA;
+wire        HDMI_MCLK;
+wire        HDMI_SCLK;
+wire        HDMI_LRCLK;
+wire        HDMI_I2S;
+
+wire        ADC_SCK;
+wire        ADC_SDO;
+wire        ADC_SDI;
+wire        ADC_CONVST;
+
+wire        SD_SPI_CS;
+wire        SD_SPI_MISO;
+wire        SD_SPI_CLK;
+wire        SD_SPI_MOSI;
+
+wire   [7:0] LED;
+
+assign LED_0_USER   = LED[0];
+assign LED_1_HDD    = LED[2];
+assign LED_2_POWER  = LED[4];
+assign LED_3_LOCKED = LED[6];
+
+// DE10-Standard / DE1-SoC / SoCKit implementation for on-board VGA DAC route - this will be overrided by code to set value to 0
+wire   VGA_EN;  // active low
+assign VGA_EN = 1'b0;		//enable VGA mode when VGA_EN is low
+
+// DE10-Standard / DE1-SoC / Arrow SoCKit VGA mode
+assign SW[3] = 1'b0;		//necessary for VGA mode
 
 //////////////////////  Secondary SD  ///////////////////////////////////
 wire SD_CS, SD_CLK, SD_MOSI, SD_MISO, SD_CD;
@@ -301,11 +363,11 @@ reg        cfg_set      = 0;
 // still have MiSTer.ini `vga_scaler=1`, which outranks the blank as before.
 `ifdef MISTER_DEBUG_NOHDMI
 	wire    vga_fb       = 0;
-	wire    vga_fb_ini   = 0;
+	//wire    vga_fb_ini   = 0;
 	wire    direct_video = 1;
 `else
 	wire    vga_fb       = cfg[12] | vga_force_scaler;
-	wire    vga_fb_ini   = cfg[12];
+	//wire    vga_fb_ini   = cfg[12];
 	wire    direct_video = cfg[10];
 `endif
 
@@ -319,9 +381,7 @@ wire       io_osd_vga   = io_ss1 & ~io_ss2;
 	`ifdef MISTER_DEBUG_NOHDMI
 		wire vga_scaler   = 0;
 	`else
-		// `| vga_force_scaler` removed here -- see the block comment at the vga_fb declaration.
-		// This is purely "the user asked for the scaler on the analog output in MiSTer.ini".
-		wire vga_scaler   = cfg[2];
+		wire vga_scaler   = cfg[2] | vga_force_scaler;
 	`endif
 `endif
 
@@ -988,11 +1048,7 @@ wire         bob_deint;
 		.vrrmax   (HEIGHT + VBP + VS[11:0] + 12'd1),
 		.swblack  (hdmi_blackout),
 
-		// the OSD "Video Processing" filters are a CHIPSET-video setting and must not run over a
-		// framebuffer. RTG comes out at ~1:1, so the FIR has nothing to interpolate and only softens
-		// what is already pixel-exact -- Nearest is the exact choice, as it is for Main's own
-		// framebuffer. With both FB_EN and LFB_EN low the expression collapses to the original.
-		.mode     ({~lowlat,LFB_EN ? LFB_FLT : (~FB_EN & |scaler_flt),2'b00}),
+		.mode     ({~lowlat,LFB_EN ? LFB_FLT : |scaler_flt,2'b00}),
 		.poly_clk (clk_sys),
 		.poly_a   (coef_addr),
 		.poly_dw  (coef_data),
@@ -1275,11 +1331,14 @@ reg   [5:0] adj_address;
 reg  [31:0] adj_data;
 
 `ifndef MISTER_DEBUG_NOHDMI
-	pll_cfg_hdmi pll_cfg_hdmi
+	//SoCkit: reconfig Altera standar (pll_cfg)
+	pll_cfg pll_cfg
 	(
 		.mgmt_clk(FPGA_CLK1_50),
 		.mgmt_reset(reset_req),
 		.mgmt_waitrequest(cfg_waitrequest),
+		.mgmt_read(1'b0),
+		.mgmt_readdata(),
 		.mgmt_write(cfg_write),
 		.mgmt_address(cfg_address),
 		.mgmt_writedata(cfg_data),
@@ -1373,11 +1432,7 @@ cyclonev_hps_interface_peripheral_i2c hdmi_i2c
 		.vs_in(hdmi_vs),
 		.de_in(hdmi_de),
 		.brd_in(hdmi_brd),
-		// second half of "no video processing over a framebuffer": the shadow mask darkens a
-		// per-pixel aperture grille over the scaler's output, and at RTG's ~1:1 scale that lands on
-		// the desktop's own single pixels. Upstream exempts only Main's Linux framebuffer; ~FB_EN
-		// widens it to the core's, leaving chipset video untouched.
-		.enable(~FB_EN),
+		.enable(~LFB_EN),
 
 		.dout(hdmi_data_mask),
 		.hs_out(hdmi_hs_mask),
@@ -1552,8 +1607,8 @@ assign HDMI_TX_D  = hdmi_out_d;
 		// the analog DAC clock follows what is actually ON the analog pins, i.e. vgas_en --
 		// so it is built from `vga_fb_ini | vga_scaler`, not `vga_fb | vga_scaler`
 		cyclonev_clkselect vga_clk_sw
-		(
-			.clkselect({1'b1, ~vga_fb_ini & ~vga_scaler}),
+		( 
+			.clkselect({1'b1, ~vga_fb & ~vga_scaler}),
 			.inclk({clk_vid, hdmi_clk_out, 2'b00}),
 			.outclk(vga_tx_clk)
 		);
@@ -1582,6 +1637,31 @@ assign HDMI_TX_D  = hdmi_out_d;
 		.aclr(~mcp_en & ~av_dis),
 		.aset(1'b0),
 		.oe(~av_dis & (mcp_en | ~led_u)),
+		.outclocken(1'b1),
+		.sclr(1'b0),
+		.sset(1'b0)
+	);
+	//SoCkit: DAC clock (VGA_CLK)
+	altddio_out
+	#(
+		.extend_oe_disable("OFF"),
+		.intended_device_family("Cyclone V"),
+		.invert_output("OFF"),
+		.lpm_hint("UNUSED"),
+		.lpm_type("altddio_out"),
+		.oe_reg("UNREGISTERED"),
+		.power_up_high("OFF"),
+		.width(1)
+	)
+	vgaclk_ddr_sockit
+	(
+		.datain_h(1'b0),
+		.datain_l(1'b1),
+		.outclock(vga_tx_clk),
+		.dataout(VGA_CLK),
+		.aclr(1'b0),
+		.aset(1'b0),
+		.oe(1'b1),
 		.outclocken(1'b1),
 		.sclr(1'b0),
 		.sset(1'b0)
@@ -1723,26 +1803,25 @@ reg  [39:0] PhaseInc;
 		assign {vga_o, vga_hs, vga_vs, vga_cs, vga_de } =  {vga_o_t, vga_hs_t, vga_vs_t, vga_cs_t, vga_de_t } ;
 	`endif
 
-	// the analog-scaler enable is INI-ONLY (vga_fb_ini = cfg[12], vga_scaler = cfg[2]); the core's
-	// VGA_SCALER request does not appear here, which is what makes VGA_DISABLE reachable during RTG
-	wire vgas_en = vga_fb_ini | vga_scaler;
+	wire vgas_en = vga_fb | vga_scaler;
 
-	// VGA_DISABLE must not leave a half-driven analog output: cs1 (sync-on-green injection) and
-	// de1 (the DAC blanking gate) leave the FPGA too on I/O boards, so a sog box would keep
-	// receiving a sync train on green while everything else is DC. Both arms are inert unless the
-	// ini enables sog or an MCP I/O board is present.
-	wire cs1 = vgas_en ? vgas_cs : VGA_DISABLE ? 1'b0 : vga_cs;
-	wire de1 = vgas_en ? vgas_de : VGA_DISABLE ? 1'b0 : vga_de;
+	wire cs1 = vgas_en ? vgas_cs : vga_cs;
+	wire de1 = vgas_en ? vgas_de : vga_de;
 
 	assign VGA_VS = av_dis ? 1'bZ      :(((vgas_en ? (~vgas_vs ^ VS[12])                         : VGA_DISABLE ? 1'd1 : ~vga_vs) | csync_en) & subcarrier_out);
 	assign VGA_HS = av_dis ? 1'bZ      :  (vgas_en ? ((csync_en ? ~vgas_cs : ~vgas_hs) ^ HS[12]) : VGA_DISABLE ? 1'd1 : (csync_en ? ~vga_cs : ~vga_hs));
-	assign VGA_R  = av_dis ? 6'bZZZZZZ :   vgas_en ? vgas_o[23:18]                               : VGA_DISABLE ? 6'd0 : vga_o[23:18];
-	assign VGA_G  = av_dis ? 6'bZZZZZZ :   vgas_en ? vgas_o[15:10]                               : VGA_DISABLE ? 6'd0 : vga_o[15:10];
-	assign VGA_B  = av_dis ? 6'bZZZZZZ :   vgas_en ? vgas_o[7:2]                                 : VGA_DISABLE ? 6'd0 : vga_o[7:2]  ;
+	//SoCkit: DAC VGA 8 bits (DAC brightness)
+	assign VGA_R  = av_dis ? 8'bZZZZZZZZ : vgas_en ? vgas_o[23:16] : VGA_DISABLE ? 8'd0 : vga_o[23:16];
+	assign VGA_G  = av_dis ? 8'bZZZZZZZZ : vgas_en ? vgas_o[15:8]  : VGA_DISABLE ? 8'd0 : vga_o[15:8];
+	assign VGA_B  = av_dis ? 8'bZZZZZZZZ : vgas_en ? vgas_o[7:0]   : VGA_DISABLE ? 8'd0 : vga_o[7:0];
 
 	wire [1:0] vga_r  = vgas_en ? vgas_o[17:16] : VGA_DISABLE ? 2'd0 : vga_o[17:16];
 	wire [1:0] vga_g  = vgas_en ? vgas_o[9:8]   : VGA_DISABLE ? 2'd0 : vga_o[9:8];
 	wire [1:0] vga_b  = vgas_en ? vgas_o[1:0]   : VGA_DISABLE ? 2'd0 : vga_o[1:0];
+
+	//SoCkit: DAC video
+	assign VGA_BLANK_N = de1;
+	assign VGA_SYNC_N  = 0;
 `endif
 
 reg video_sync = 0;
@@ -1871,6 +1950,24 @@ audio_out audio_out
 		.pcm_r(alsa_r)
 	);
 `endif
+
+//AUDIO CODEC implementation & configuration: SSM2603 for Arrow SoCkit and compatible Wolfson WM8731 for DE10-standard & DE1-SoC
+
+assign AUD_MUTE    = 1'b1;
+assign AUD_XCK     = HDMI_MCLK;
+assign AUD_DACLRCK = HDMI_LRCLK;
+assign AUD_BCLK    = HDMI_SCLK;
+assign AUD_DACDAT  = HDMI_I2S;
+
+// I2C audio config
+I2C_AV_Config audio_config (
+  // host side
+  .iCLK         (clk_audio        ),
+  .iRST_N       (!reset           ),
+  // i2c side
+  .oI2C_SCLK    (AUD_I2C_SCLK     ),
+  .oI2C_SDAT    (AUD_I2C_SDAT     )
+);
 
 ////////////////  User I/O (USB 3.0 connector) /////////////////////////
 
